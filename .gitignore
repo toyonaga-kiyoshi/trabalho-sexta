@@ -1,0 +1,22 @@
+
+# Dependências do Node.js
+node_modules/
+
+# Variáveis de ambiente e chaves
+.env
+.env.*
+
+# Permite manter um exemplo de configuração
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+*.log
+
+# Arquivos do sistema operacional
+Thumbs.db
+.DS_Store
+
+# Configurações locais do VS Code
+.vscode/

@@ -1,0 +1,194 @@
+
+/* Configuração geral */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f4f8;
+    color: #333;
+    padding: 30px;
+}
+
+.app {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Cabeçalho */
+.topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+h1 {
+    color: #2563eb;
+    margin-bottom: 8px;
+}
+
+.subtitulo {
+    color: #666;
+}
+
+/* Botões */
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primario {
+    background-color: #2563eb;
+    color: white;
+}
+
+.btn-secundario {
+    background-color: #e2e8f0;
+    color: #333;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+/* Painel da tabela */
+.painel {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #00000010;
+    overflow-x: auto;
+}
+
+.painel-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+/* Tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8fafc;
+    color: #444;
+}
+
+.vazio {
+    text-align: center;
+    color: #777;
+    padding: 25px;
+}
+
+/* Formulário e modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+}
+
+.modal-fundo {
+    position: absolute;
+    inset: 0;
+    background-color: #00000080;
+}
+
+.modal-caixa {
+    position: relative;
+    background-color: white;
+    width: 90%;
+    max-width: 450px;
+    margin: 80px auto;
+    padding: 25px;
+    border-radius: 8px;
+}
+
+.modal-caixa h2 {
+    margin-bottom: 20px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+input {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+input:focus {
+    outline: 2px solid #93c5fd;
+    border-color: #2563eb;
+}
+
+.modal-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Mensagens */
+.msg {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+/* Esconde elementos com o atributo hidden */
+[hidden] {
+    display: none !important;
+}
+
+/* Ajuste para celular */
+@media (max-width: 600px) {
+    body {
+        padding: 15px;
+    }
+
+    .topo {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .painel-cabecalho {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+}
