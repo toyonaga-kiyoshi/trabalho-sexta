@@ -1,18 +1,15 @@
 {
-  "name": "meu-node-supabase1",
+  "name": "meu-node-supabase",
   "version": "1.0.0",
-  "description": "",
+  "description": "Projeto Node.js + Supabase seguindo o material até a página 65",
   "main": "server.js",
   "scripts": {
+    "demo": "node index.js",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@supabase/supabase-js": "^2.112.3",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "@supabase/supabase-js": "^2.0.0",
+    "dotenv": "^17.0.0",
+    "express": "^5.0.0"
   }
 }
