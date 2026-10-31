@@ -1,139 +1,203 @@
-
 require('dotenv').config();
 
 const express = require('express');
-const path = require('path');
 
 const {
-    inserirAluno,
-    listarAlunos,
-    buscarPorRa,
-    buscarPorNome,
-    atualizarAluno,
-    excluirPorRa
+  inserirCurso,
+  listarCursos,
+  excluirCurso,
+  inserirAluno,
+  listarAlunos,
+  listarAlunosDoCurso,
+  buscarPorRa,
+  atualizarAluno,
+  excluirPorRa
 } = require('./supabase');
 
-// Cria o servidor primeiro
+const ERRO_CHAVE_ESTRANGEIRA = '23503';
+
 const app = express();
 
-// Configurações do servidor
 app.use(express.json());
+app.use(express.static('public'));
 
-// Permite acessar os arquivos do frontend
-app.use(express.static(path.join(__dirname, 'frontend')));
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
-});
+function lerPagina(query) {
+  if (query.limite === undefined && query.inicio === undefined) {
+    return null;
+  }
 
+  const limite = Number(query.limite);
+  const inicio =
+    query.inicio === undefined ? 0 : Number(query.inicio);
 
-// ==========================
-// GET - LISTAR TODOS
-// ==========================
+  if (!Number.isInteger(limite) || limite < 1 || limite > 100) {
+    return { erro: 'Informe limite entre 1 e 100' };
+  }
+
+  if (!Number.isInteger(inicio) || inicio < 0) {
+    return { erro: 'inicio inválido' };
+  }
+
+  return { inicio, limite };
+}
 
 app.get('/alunos', async (req, res) => {
-    try {
-        const dados = await listarAlunos();
-        res.json(dados);
-    } catch (e) {
-        res.status(500).json({
-            erro: e.message
-        });
+  try {
+    const pagina = lerPagina(req.query);
+
+    if (pagina && pagina.erro) {
+      return res.status(400).json({ erro: pagina.erro });
     }
+
+    const dados = await listarAlunos(pagina || {});
+
+    res.json(
+      pagina
+        ? { ...dados, inicio: pagina.inicio, limite: pagina.limite }
+        : dados
+    );
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
 });
-
-
-// ==========================
-// GET - BUSCAR POR RA
-// ==========================
 
 app.get('/alunos/:ra', async (req, res) => {
-    try {
-        const aluno = await buscarPorRa(req.params.ra);
-        res.json(aluno);
-    } catch (e) {
-        res.status(500).json({
-            erro: e.message
-        });
+  try {
+    const aluno = await buscarPorRa(req.params.ra);
+
+    if (!aluno) {
+      return res.status(404).json({ erro: 'Aluno não encontrado' });
     }
+
+    res.json(aluno);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
 });
-
-
-// ==========================
-// POST - CADASTRAR
-// ==========================
 
 app.post('/alunos', async (req, res) => {
-    try {
-        const { nome, ra, curso } = req.body;
+  try {
+    const { nome, ra, curso_id } = req.body;
 
-        if (!nome || !ra) {
-            return res.status(400).json({
-                erro: 'Campos obrigatórios: nome e ra'
-            });
-        }
-
-        const aluno = await inserirAluno(nome, ra, curso);
-
-        res.status(201).json(aluno);
-    } catch (e) {
-        res.status(500).json({
-            erro: e.message
-        });
+    if (!nome || !ra || !curso_id) {
+      return res.status(400).json({
+        erro: 'Campos obrigatórios: nome, ra e curso_id'
+      });
     }
+
+    const aluno = await inserirAluno(nome, ra, curso_id);
+    res.status(201).json(aluno);
+  } catch (e) {
+    if (e.code === ERRO_CHAVE_ESTRANGEIRA) {
+      return res.status(400).json({
+        erro: 'O curso informado não existe'
+      });
+    }
+
+    res.status(400).json({ erro: e.message });
+  }
 });
-
-
-// ==========================
-// PUT - ATUALIZAR
-// ==========================
 
 app.put('/alunos/:ra', async (req, res) => {
-    try {
-        const { nome, curso } = req.body;
+  try {
+    const { nome, curso_id } = req.body;
 
-        if (!nome && !curso) {
-            return res.status(400).json({
-                erro: 'Informe nome e/ou curso para atualizar'
-            });
-        }
-
-        const data = await atualizarAluno(
-            req.params.ra,
-            nome,
-            curso
-        );
-
-        res.json(data);
-    } catch (e) {
-        res.status(400).json({
-            erro: e.message
-        });
+    if (!nome && !curso_id) {
+      return res.status(400).json({
+        erro: 'Informe nome e/ou curso_id para atualizar'
+      });
     }
+
+    const data = await atualizarAluno(
+      req.params.ra,
+      nome,
+      curso_id
+    );
+
+    res.json(data);
+  } catch (e) {
+    if (e.code === ERRO_CHAVE_ESTRANGEIRA) {
+      return res.status(400).json({
+        erro: 'O curso informado não existe'
+      });
+    }
+
+    res.status(400).json({ erro: e.message });
+  }
 });
-
-
-// ==========================
-// DELETE - EXCLUIR
-// ==========================
 
 app.delete('/alunos/:ra', async (req, res) => {
-    try {
-        const data = await excluirPorRa(req.params.ra);
-        res.json(data);
-    } catch (e) {
-        res.status(400).json({
-            erro: e.message
-        });
-    }
+  try {
+    const data = await excluirPorRa(req.params.ra);
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ erro: e.message });
+  }
 });
 
+app.get('/cursos', async (req, res) => {
+  try {
+    res.json(await listarCursos());
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
 
-// ==========================
-// SERVIDOR
-// ==========================
+app.post('/cursos', async (req, res) => {
+  try {
+    const { nome } = req.body;
+
+    if (!nome) {
+      return res.status(400).json({
+        erro: 'Campo obrigatório: nome'
+      });
+    }
+
+    res.status(201).json(await inserirCurso(nome));
+  } catch (e) {
+    res.status(400).json({ erro: e.message });
+  }
+});
+
+app.delete('/cursos/:id', async (req, res) => {
+  try {
+    res.json(await excluirCurso(req.params.id));
+  } catch (e) {
+    if (e.code === ERRO_CHAVE_ESTRANGEIRA) {
+      return res.status(409).json({
+        erro: 'Não é possível excluir: este curso ainda tem alunos'
+      });
+    }
+
+    res.status(400).json({ erro: e.message });
+  }
+});
+
+app.get('/cursos/:id/alunos', async (req, res) => {
+  try {
+    const pagina = lerPagina(req.query);
+
+    if (pagina && pagina.erro) {
+      return res.status(400).json({ erro: pagina.erro });
+    }
+
+    const dados = await listarAlunosDoCurso(
+      req.params.id,
+      pagina || {}
+    );
+
+    res.json(
+      pagina
+        ? { ...dados, inicio: pagina.inicio, limite: pagina.limite }
+        : dados
+    );
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`API rodando em http://localhost:${PORT}`);
+  console.log(`API rodando em http://localhost:${PORT}`);
 });
