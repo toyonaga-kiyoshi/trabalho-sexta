@@ -38,7 +38,19 @@ function lerPagina(query) {
     return { erro: 'inicio inválido' };
   }
 
-  return { inicio, limite };
+  const busca = String(query.busca || '').trim();
+  const ordem = String(query.ordem || 'nome').toLowerCase();
+  const direcao = String(query.direcao || 'asc').toLowerCase();
+
+  if (!['nome', 'ra', 'curso'].includes(ordem)) {
+    return { erro: 'ordem inválida. Use nome, ra ou curso.' };
+  }
+
+  if (!['asc', 'desc'].includes(direcao)) {
+    return { erro: 'direcao inválida. Use asc ou desc.' };
+  }
+
+  return { inicio, limite, busca, ordem, direcao };
 }
 
 app.get('/alunos', async (req, res) => {
@@ -79,13 +91,18 @@ app.post('/alunos', async (req, res) => {
   try {
     const { nome, ra, curso_id } = req.body;
 
-    if (!nome || !ra || !curso_id) {
+    if (!String(nome || '').trim() || !String(ra || '').trim() || !curso_id) {
       return res.status(400).json({
         erro: 'Campos obrigatórios: nome, ra e curso_id'
       });
     }
 
-    const aluno = await inserirAluno(nome, ra, curso_id);
+    const aluno = await inserirAluno(
+      String(nome).trim(),
+      String(ra).trim(),
+      curso_id
+    );
+
     res.status(201).json(aluno);
   } catch (e) {
     if (e.code === ERRO_CHAVE_ESTRANGEIRA) {
@@ -114,7 +131,11 @@ app.put('/alunos/:ra', async (req, res) => {
       curso_id
     );
 
-    res.json(data);
+    if (!data || data.length === 0) {
+      return res.status(404).json({ erro: 'Aluno não encontrado' });
+    }
+
+    res.json(data[0]);
   } catch (e) {
     if (e.code === ERRO_CHAVE_ESTRANGEIRA) {
       return res.status(400).json({
@@ -129,7 +150,12 @@ app.put('/alunos/:ra', async (req, res) => {
 app.delete('/alunos/:ra', async (req, res) => {
   try {
     const data = await excluirPorRa(req.params.ra);
-    res.json(data);
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ erro: 'Aluno não encontrado' });
+    }
+
+    res.json({ mensagem: 'Aluno excluído com sucesso' });
   } catch (e) {
     res.status(400).json({ erro: e.message });
   }
@@ -165,7 +191,7 @@ app.delete('/cursos/:id', async (req, res) => {
   } catch (e) {
     if (e.code === ERRO_CHAVE_ESTRANGEIRA) {
       return res.status(409).json({
-        erro: 'Não é possível excluir: este curso ainda tem alunos'
+        erro: 'Não é possível excluir um curso que possui alunos.'
       });
     }
 
@@ -173,31 +199,8 @@ app.delete('/cursos/:id', async (req, res) => {
   }
 });
 
-app.get('/cursos/:id/alunos', async (req, res) => {
-  try {
-    const pagina = lerPagina(req.query);
-
-    if (pagina && pagina.erro) {
-      return res.status(400).json({ erro: pagina.erro });
-    }
-
-    const dados = await listarAlunosDoCurso(
-      req.params.id,
-      pagina || {}
-    );
-
-    res.json(
-      pagina
-        ? { ...dados, inicio: pagina.inicio, limite: pagina.limite }
-        : dados
-    );
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`API rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
